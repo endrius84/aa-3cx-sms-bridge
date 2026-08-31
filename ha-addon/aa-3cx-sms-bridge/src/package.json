@@ -1,0 +1,18 @@
+{
+  "name": "aa-3cx-sms-bridge",
+  "version": "1.0.0",
+  "description": "Translation bridge between Andrews & Arnold (A&A/AAISP) SMS delivery and 3CX's Generic SMS provider webhook.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "keywords": ["aaisp", "andrews-and-arnold", "3cx", "sms", "webhook", "bridge"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "node-fetch": "^2.7.0"
+  }
+}

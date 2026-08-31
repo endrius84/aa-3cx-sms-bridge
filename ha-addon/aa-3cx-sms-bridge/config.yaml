@@ -1,0 +1,32 @@
+name: "AA-3CX SMS Bridge"
+version: "1.0.0"
+slug: "aa_3cx_sms_bridge"
+description: "Translates SMS between Andrews & Arnold and 3CX's Generic SMS provider"
+url: "https://github.com/YOUR-GITHUB-USERNAME/aa-3cx-sms-bridge"
+arch:
+  - aarch64
+  - amd64
+  - armv7
+init: false
+startup: application
+boot: auto
+ports:
+  3000/tcp: 3000
+ports_description:
+  3000/tcp: "HTTP port the bridge listens on (proxy this through Cloudflare Tunnel)"
+options:
+  threecx_webhook_url: ""
+  aa_sms_url: "https://sms.aa.net.uk/sms.cgi"
+  aa_username: ""
+  aa_password: ""
+  shared_secret: ""
+  inbound_path: "/aa-sms-in"
+  outbound_path: "/cx-sms-out"
+schema:
+  threecx_webhook_url: "url"
+  aa_sms_url: "url"
+  aa_username: "str"
+  aa_password: "password"
+  shared_secret: "password"
+  inbound_path: "str"
+  outbound_path: "str"
