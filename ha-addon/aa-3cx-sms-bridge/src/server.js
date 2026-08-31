@@ -2,11 +2,15 @@ require('dotenv').config();
 const express = require('express');
 const crypto = require('crypto');
 const fetch = require('node-fetch');
+const multer = require('multer');
 
 const app = express();
+const upload = multer(); // parses multipart/form-data fields (no file uploads expected)
 
-// A&A posts standard form-encoded fields, so we need urlencoded parsing.
-// We also accept JSON just in case (e.g. for the 3CX -> us outbound leg).
+// A&A's inbound POST is multipart/form-data, not urlencoded — multer
+// handles that on the inbound route specifically (see app.post below).
+// We still parse urlencoded + JSON globally in case that ever changes,
+// or for the 3CX -> us outbound leg.
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -99,7 +103,9 @@ async function handleInbound(req, res) {
 
 // A&A's exact HTTP method for delivering to a URL target isn't documented,
 // so listen on both until we've confirmed which one it actually uses.
-app.post(INBOUND_PATH, handleInbound);
+// upload.none() parses multipart/form-data fields (A&A's actual format)
+// into req.body without expecting any file attachments.
+app.post(INBOUND_PATH, upload.none(), handleInbound);
 app.get(INBOUND_PATH, handleInbound);
 
 /**
