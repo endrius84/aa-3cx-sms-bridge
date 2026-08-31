@@ -98,9 +98,32 @@ HA Supervisor add-on — no SSH access to the host required.
 4. Go to the add-on's **Configuration** tab and fill in:
    - `threecx_webhook_url` — from 3CX's Generic SMS provider
    - `aa_username` / `aa_password` — your A&A VoIP number and outgoing SMS password
-   - `shared_secret` — generate one (see above), keep it, you'll need it below
+   - `shared_secret` — a random string only you know, since A&A's POST has
+     no built-in auth. Generate one with:
+     ```bash
+     node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"
+     ```
+     (any machine with Node works — this doesn't need to run on the HA box
+     itself). Paste the result in here, and remember it — you'll need it
+     again below as the `?key=...` part of the URLs you give to A&A and 3CX.
    - leave `aa_sms_url`, `inbound_path`, `outbound_path` as default unless you have a reason to change them
 5. Start the add-on, check its **Log** tab for `AA <-> 3CX SMS bridge listening on port 3000`
+
+### Public HTTPS access is required
+
+A&A and 3CX both need to reach this add-on **from the internet** — your
+Home Assistant instance can't just be reachable on your local network.
+You need some form of public HTTPS exposure pointed at port 3000 on your
+HA host. A few common options:
+
+- **Cloudflare Tunnel** (covered in detail below) — no router config or
+  open ports needed
+- **Nginx Proxy Manager** — if you already run a reverse proxy with a
+  domain and TLS cert
+- **Nabu Casa** — Home Assistant's official remote access subscription
+
+Whichever you use, the end result is the same: a public HTTPS URL that
+forwards to `your-ha-host-ip:3000`.
 
 ### Exposing it via Cloudflare Tunnel
 
@@ -132,12 +155,16 @@ to `jq`.
   pointing 3CX or A&A at temporarily to see their raw payload shape
 - Every inbound and outbound request is logged to stdout
 
-## Known unknowns
+## Notes on payload formats (confirmed from real traffic)
 
-- A&A's `!` target prefix isn't documented anywhere public — if you need
-  it, ask A&A support directly.
-- 3CX's outbound Generic SMS payload shape is inferred, not confirmed
-  against real 3CX traffic yet — expect to adjust `extractOutbound()`.
+- **A&A's inbound POST is `multipart/form-data`**, not
+  `application/x-www-form-urlencoded` as A&A's own docs might suggest at
+  first read. The bridge uses `multer` to parse it.
+- **3CX's outbound webhook payload is a flat JSON object**:
+  `{"from":"+44...","to":"+44...","text":"..."}` — confirmed from live
+  traffic, `extractOutbound()` handles this shape.
+- A&A's `!` target prefix still isn't documented anywhere public — if you
+  need it, ask A&A support directly.
 
 ## License
 
