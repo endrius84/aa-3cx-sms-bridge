@@ -39,11 +39,19 @@ function checkSecret(req, res) {
  * and ISO8601 timestamps, e.g.:
  *   you@example.com +https://your-server/aa-sms-in?key=yoursecret
  */
-app.post(INBOUND_PATH, async (req, res) => {
+async function handleInbound(req, res) {
   if (!checkSecret(req, res)) return;
 
-  const aa = req.body || {};
-  console.log('[inbound] received from A&A:', aa);
+  // A&A's exact delivery mechanism (GET query string vs POST form body)
+  // isn't confirmed, so accept fields from either — query string wins if
+  // a field appears in both, since that's the more common webhook pattern.
+  const aa = { ...(req.body || {}), ...(req.query || {}) };
+
+  console.log(`[inbound] ${req.method} received from A&A`);
+  console.log('[inbound] query:', req.query);
+  console.log('[inbound] body:', req.body);
+  console.log('[inbound] content-type:', req.headers['content-type']);
+  console.log('[inbound] merged fields:', aa);
 
   if (!aa.ud && !aa.message) {
     console.warn('[inbound] payload has no recognisable message body, ignoring');
@@ -87,7 +95,12 @@ app.post(INBOUND_PATH, async (req, res) => {
   }
 
   res.status(200).send('OK');
-});
+}
+
+// A&A's exact HTTP method for delivering to a URL target isn't documented,
+// so listen on both until we've confirmed which one it actually uses.
+app.post(INBOUND_PATH, handleInbound);
+app.get(INBOUND_PATH, handleInbound);
 
 /**
  * LEG 2 — OUTBOUND: 3CX -> us -> A&A
