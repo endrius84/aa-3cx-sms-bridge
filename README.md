@@ -48,6 +48,11 @@ See `.env.example` for every setting. At minimum you need:
   ```bash
   node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"
   ```
+  **Generate your own random value — never reuse an example secret you've
+  seen elsewhere (including in this README's own examples), and never
+  commit a real secret to `.env` or anywhere else in the repo.** The
+  `.gitignore` keeps `.env` out of git, but double-check before pushing if
+  you ever hardcode it anywhere for testing.
 
 ## Wiring it up
 
